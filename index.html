@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Seguimiento de Oposiciones</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #f8f4ff 0%, #fce4f7 100%);
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(120deg, #7c5cbf, #c060a1);
+      padding: 28px 20px 20px;
+      text-align: center;
+      border-radius: 0 0 30px 30px;
+      margin-bottom: 20px;
+    }
+    .header h1 { font-family: 'Pacifico', cursive; font-size: 26px; color: #fff; letter-spacing: 1px; }
+    .header p { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 2px; }
+    .header small { font-size: 11px; color: rgba(255,255,255,0.6); font-style: italic; display: block; margin-top: 4px; }
+    .btn-nueva {
+      margin-top: 16px;
+      background: #fff;
+      color: #7c5cbf;
+      border: none;
+      border-radius: 14px;
+      padding: 10px 28px;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+
+    /* FILTROS */
+    .filtros {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 16px 8px;
+      margin-bottom: 16px;
+      scrollbar-width: none;
+    }
+    .filtros::-webkit-scrollbar { display: none; }
+    .filtro-btn {
+      white-space: nowrap;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      background: #f3eeff;
+      color: #9c7bb5;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .filtro-btn.active { background: #7c5cbf; color: #fff; }
+
+    /* LISTA */
+    .lista { padding: 0 16px; }
+
+    .empty {
+      text-align: center;
+      margin-top: 60px;
+      color: #c9b8e8;
+    }
+    .empty .emoji { font-size: 48px; }
+    .empty p { font-size: 15px; margin-top: 10px; }
+    .empty small { font-size: 13px; }
+
+    /* CARD */
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 20px rgba(120,60,200,0.08);
+      position: relative;
+      border-left: 4px solid #e0e0e0;
+    }
+    .card.urgente { box-shadow: 0 0 0 2px #f6c90e, 0 4px 20px rgba(120,60,200,0.08); }
+
+    .card-urgente-badge {
+      position: absolute;
+      top: 12px; right: 12px;
+      background: #f6c90e;
+      border-radius: 10px;
+      padding: 2px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #7a6000;
+    }
+
+    .card-puesto { font-family: 'Pacifico', cursive; font-size: 15px; color: #5c3d99; margin-bottom: 2px; }
+    .card-sub { font-size: 12px; color: #9c7bb5; margin-bottom: 8px; }
+
+    .badge {
+      display: inline-block;
+      border-radius: 20px;
+      padding: 2px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .card-fechas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; font-size: 12px; color: #888; }
+    .card-fechas a { color: #7c5cbf; text-decoration: none; }
+
+    .card-perfiles { display: flex; gap: 10px; margin-top: 12px; }
+    .perfil-haizea { flex: 1; background: #f3eeff; border-radius: 10px; padding: 8px 12px; font-size: 11px; }
+    .perfil-kerman { flex: 1; background: #fff4fb; border-radius: 10px; padding: 8px 12px; font-size: 11px; }
+    .perfil-nombre-h { font-weight: 800; color: #7c5cbf; margin-bottom: 4px; }
+    .perfil-nombre-k { font-weight: 800; color: #c060a1; margin-bottom: 4px; }
+    .perfil-info { color: #888; }
+    .perfil-reqs { color: #7c5cbf; margin-top: 2px; }
+    .perfil-reqs-k { color: #c060a1; margin-top: 2px; }
+    .perfil-resultado { color: #555; margin-top: 2px; }
+
+    .card-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-edit {
+      flex: 1; padding: 7px; border-radius: 10px;
+      border: 1.5px solid #e8d5f5; background: none;
+      cursor: pointer; font-family: 'Nunito', sans-serif;
+      font-weight: 700; color: #7c5cbf; font-size: 13px;
+    }
+    .btn-del {
+      padding: 7px 14px; border-radius: 10px;
+      border: 1.5px solid #ffd5d5; background: none;
+      cursor: pointer; font-family: 'Nunito', sans-serif;
+      font-weight: 700; color: #ef9a9a; font-size: 13px;
+    }
+
+    /* MODAL OVERLAY */
+    .overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(80,40,120,0.18);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 22px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 40px rgba(120,60,200,0.18);
+      padding: 24px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .modal-title { font-family: 'Pacifico', cursive; font-size: 20px; color: #7c5cbf; }
+    .btn-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #bbb; }
+
+    /* TABS */
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab-btn {
+      flex: 1; padding: 6px 4px; border-radius: 10px; border: none; cursor: pointer;
+      background: #f3eeff; color: #9c7bb5;
+      font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 11px; text-transform: capitalize;
+    }
+    .tab-btn.active { background: #7c5cbf; color: #fff; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* FORM */
+    .section-title {
+      font-weight: 800; color: #7c5cbf; font-size: 13px;
+      margin-top: 18px; margin-bottom: 8px;
+      border-bottom: 2px solid #e8d5f5; padding-bottom: 4px;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .col-full { grid-column: 1 / -1; }
+
+    label.field { display: block; margin-bottom: 10px; }
+    .field-label {
+      display: block; font-size: 11px; font-weight: 700;
+      color: #9c7bb5; text-transform: uppercase;
+      letter-spacing: 0.5px; margin-bottom: 4px;
+    }
+    input[type=text], input[type=number], input[type=date],
+    input[type=time], input[type=url], select, textarea {
+      width: 100%; padding: 8px 12px; border-radius: 10px;
+      border: 1.5px solid #e8d5f5; font-family: 'Nunito', sans-serif;
+      font-size: 14px; background: #faf7ff; color: #4a4a6a; outline: none;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+
+    .check-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 8px; cursor: pointer; font-size: 13px;
+    }
+
+    /* PERSONA SECTION */
+    .persona-box {
+      border-radius: 14px; padding: 16px; margin-top: 12px;
+    }
+    .persona-box.haizea { background: #f3eeff; }
+    .persona-box.kerman { background: #fff4fb; }
+    .persona-header {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-bottom: 10px;
+    }
+    .persona-nombre { font-weight: 800; font-size: 15px; }
+    .persona-nombre.h { color: #7c5cbf; }
+    .persona-nombre.k { color: #c060a1; }
+    .kermancheck { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px; color: #888; }
+
+    /* REQUISITOS */
+    .req-add-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .req-add-row input { flex: 1; }
+    .btn-add-req {
+      background: #7c5cbf; color: #fff; border: none;
+      border-radius: 10px; padding: 8px 16px; cursor: pointer;
+      font-family: 'Nunito', sans-serif; font-weight: 700;
+    }
+    .req-item {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 8px; background: #f8f4ff;
+      border-radius: 10px; padding: 8px 12px;
+    }
+    .req-item span { flex: 1; font-size: 13px; color: #4a4a6a; }
+    .btn-req-del { background: none; border: none; color: #ef9a9a; cursor: pointer; font-size: 16px; }
+
+    .req-check-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer; font-size: 13px; }
+
+    /* MODAL ACTIONS */
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-cancel {
+      flex: 1; padding: 10px; border-radius: 12px;
+      border: 1.5px solid #e8d5f5; background: none; cursor: pointer;
+      font-family: 'Nunito', sans-serif; font-weight: 700; color: #9c7bb5;
+    }
+    .btn-save {
+      flex: 2; padding: 10px; border-radius: 12px; border: none;
+      background: #7c5cbf; color: #fff; cursor: pointer;
+      font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 15px;
+    }
+
+    .hint { color: #bbb; font-size: 11px; margin-top: 8px; }
+    .no-reqs { color: #bbb; font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>Seguimiento</h1>
+  <p>de Oposiciones</p>
+  <small>Lo que hagas hoy te acercará a donde quieres estar mañana.</small>
+  <br>
+  <button class="btn-nueva" onclick="abrirNueva()">+ Nueva OPE</button>
+</div>
+
+<!-- FILTROS -->
+<div class="filtros" id="filtros"></div>
+
+<!-- LISTA -->
+<div class="lista" id="lista"></div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-titulo">Nueva OPE</span>
+      <button class="btn-close" onclick="cerrarModal()">✕</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="cambiarTab('general', this)">General</button>
+      <button class="tab-btn" onclick="cambiarTab('fechas', this)">Fechas</button>
+      <button class="tab-btn" onclick="cambiarTab('requisitos', this)">Requisitos</button>
+      <button class="tab-btn" onclick="cambiarTab('perfiles', this)">Perfiles</button>
+    </div>
+
+    <!-- TAB GENERAL -->
+    <div class="tab-content active" id="tab-general">
+      <div class="section-title">Convocatoria</div>
+      <div class="grid-2">
+        <label class="field col-full">
+          <span class="field-label">Organismo</span>
+          <input type="text" id="f-organismo" placeholder="Ayuntamiento de..." />
+        </label>
+        <label class="field col-full">
+          <span class="field-label">Puesto</span>
+          <input type="text" id="f-puesto" placeholder="Nombre del puesto" />
+        </label>
+        <label class="field">
+          <span class="field-label">Sistema</span>
+          <select id="f-sistema">
+            <option value="">Seleccionar...</option>
+            <option>Oposición libre</option>
+            <option>Concurso-oposición</option>
+            <option>Concurso</option>
+            <option>Libre designación</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">Grupo</span>
+          <select id="f-grupo">
+            <option value="">Seleccionar...</option>
+            <option>AP</option><option>C2</option><option>C1</option>
+            <option>B</option><option>A2</option><option>A1</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">Nº de plazas</span>
+          <input type="number" id="f-plazas" placeholder="1" min="1" />
+        </label>
+        <label class="field">
+          <span class="field-label">Estado general</span>
+          <select id="f-estado">
+            <option>Pendiente solicitar</option>
+            <option>En plazo</option>
+            <option>Solicitada</option>
+            <option>En proceso</option>
+            <option>Descartada</option>
+            <option>Resuelta</option>
+          </select>
+        </label>
+        <label class="field col-full">
+          <span class="field-label">URL convocatoria</span>
+          <input type="url" id="f-url" placeholder="https://..." />
+        </label>
+      </div>
+
+      <div class="section-title">Tasas y otros</div>
+      <div class="grid-2">
+        <label class="field">
+          <span class="field-label">Importe tasa (€)</span>
+          <input type="text" id="f-tasa-importe" placeholder="15,00" />
+        </label>
+        <div class="field">
+          <span class="field-label">Genera bolsa</span>
+          <label class="check-row">
+            <input type="checkbox" id="f-bolsa" /> Sí
+          </label>
+        </div>
+        <label class="field">
+          <span class="field-label">Puntuación mínima</span>
+          <input type="text" id="f-puntuacion-min" placeholder="5" />
+        </label>
+        <label class="field">
+          <span class="field-label">Penalización</span>
+          <input type="text" id="f-penalizacion" placeholder="1/3, 0.25..." />
+        </label>
+      </div>
+
+      <div class="section-title">Listas y resolución</div>
+      <div class="grid-2">
+        <label class="field">
+          <span class="field-label">Lista provisional</span>
+          <input type="text" id="f-lista-prov" placeholder="Fecha o estado" />
+        </label>
+        <label class="field">
+          <span class="field-label">Lista definitiva</span>
+          <input type="text" id="f-lista-def" placeholder="Fecha o estado" />
+        </label>
+        <label class="field">
+          <span class="field-label">Aprobados</span>
+          <input type="text" id="f-aprobados" placeholder="Fecha o estado" />
+        </label>
+        <label class="field">
+          <span class="field-label">Resolución definitiva</span>
+          <input type="date" id="f-resolucion" />
+        </label>
+      </div>
+
+      <div class="section-title">Reflexión</div>
+      <textarea id="f-reflexion" placeholder="Notas personales, sensaciones, estrategia..."></textarea>
+    </div>
+
+    <!-- TAB FECHAS -->
+    <div class="tab-content" id="tab-fechas">
+      <div class="section-title">Plazos</div>
+      <div class="grid-2">
+        <label class="field col-full">
+          <span class="field-label">Fin de instancia (último día para solicitar)</span>
+          <input type="date" id="f-fin-instancia" />
+        </label>
+        <label class="field">
+          <span class="field-label">Plazo subida desde</span>
+          <input type="date" id="f-plazo-desde" />
+        </label>
+        <label class="field">
+          <span class="field-label">Plazo subida hasta</span>
+          <input type="date" id="f-plazo-hasta" />
+        </label>
+      </div>
+      <div class="section-title">Examen</div>
+      <div class="grid-2">
+        <label class="field">
+          <span class="field-label">Fecha examen</span>
+          <input type="date" id="f-fecha-examen" />
+        </label>
+        <label class="field">
+          <span class="field-label">Hora examen</span>
+          <input type="time" id="f-hora-examen" />
+        </label>
+      </div>
+    </div>
+
+    <!-- TAB REQUISITOS -->
+    <div class="tab-content" id="tab-requisitos">
+      <div class="section-title">Lista de requisitos</div>
+      <div class="req-add-row">
+        <input type="text" id="nuevo-req" placeholder="Añadir requisito..." onkeydown="if(event.key==='Enter') addRequisito()" />
+        <button class="btn-add-req" onclick="addRequisito()">+</button>
+      </div>
+      <div id="lista-requisitos"></div>
+      <p class="hint">Los ticks de cumplimiento de cada persona están en la pestaña "Perfiles".</p>
+    </div>
+
+    <!-- TAB PERFILES -->
+    <div class="tab-content" id="tab-perfiles">
+      <!-- HAIZEA -->
+      <div class="persona-box haizea">
+        <div class="persona-header">
+          <span class="persona-nombre h">🌸 Haizea</span>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <span class="field-label">Inscrita</span>
+            <label class="check-row"><input type="checkbox" id="h-inscrita" /> Sí</label>
+          </div>
+          <div class="field">
+            <span class="field-label">Tasa pagada</span>
+            <label class="check-row"><input type="checkbox" id="h-tasa" /> Sí</label>
+          </div>
+        </div>
+        <label class="field">
+          <span class="field-label">Nº de registro</span>
+          <input type="text" id="h-registro" placeholder="Número de registro" />
+        </label>
+        <label class="field">
+          <span class="field-label">Resultado</span>
+          <input type="text" id="h-resultado" placeholder="Apto, No apto, puntuación..." />
+        </label>
+        <div id="h-req-checks"></div>
+      </div>
+
+      <!-- KERMAN -->
+      <div class="persona-box kerman">
+        <div class="persona-header">
+          <span class="persona-nombre k">💙 Kerman</span>
+          <label class="kermancheck">
+            <input type="checkbox" id="k-sePresenta" onchange="toggleKerman()" /> Se presenta
+          </label>
+        </div>
+        <div id="kerman-fields" style="display:none">
+          <div class="grid-2">
+            <div class="field">
+              <span class="field-label">Inscrito</span>
+              <label class="check-row"><input type="checkbox" id="k-inscrito" /> Sí</label>
+            </div>
+            <div class="field">
+              <span class="field-label">Tasa pagada</span>
+              <label class="check-row"><input type="checkbox" id="k-tasa" /> Sí</label>
+            </div>
+          </div>
+          <label class="field">
+            <span class="field-label">Nº de registro</span>
+            <input type="text" id="k-registro" placeholder="Número de registro" />
+          </label>
+          <label class="field">
+            <span class="field-label">Resultado</span>
+            <input type="text" id="k-resultado" placeholder="Apto, No apto, puntuación..." />
+          </label>
+          <div id="k-req-checks"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardarOpe()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ESTADO_COLORS = {
+    "Pendiente solicitar": "#b39ddb",
+    "En plazo": "#f6c90e",
+    "Solicitada": "#81c784",
+    "En proceso": "#64b5f6",
+    "Descartada": "#ef9a9a",
+    "Resuelta": "#a5d6a7",
+  };
+
+  let opes = JSON.parse(localStorage.getItem('opes-tracker') || '[]');
+  let editandoId = null;
+  let requisitosTemp = []; // [{id, texto}]
+  let filtroActivo = 'Todas';
+
+  // ---- RENDER PRINCIPAL ----
+  function render() {
+    renderFiltros();
+    renderLista();
+  }
+
+  function renderFiltros() {
+    const estados = ['Todas', 'Pendiente solicitar', 'En plazo', 'Solicitada', 'En proceso', 'Descartada', 'Resuelta'];
+    const div = document.getElementById('filtros');
+    div.innerHTML = estados.map(e =>
+      `<button class="filtro-btn ${filtroActivo === e ? 'active' : ''}" onclick="setFiltro('${e}')">${e}</button>`
+    ).join('');
+  }
+
+  function setFiltro(estado) {
+    filtroActivo = estado;
+    render();
+  }
+
+  function renderLista() {
+    const lista = document.getElementById('lista');
+    const filtered = filtroActivo === 'Todas' ? opes : opes.filter(o => o.estadoGeneral === filtroActivo);
+
+    if (filtered.length === 0) {
+      lista.innerHTML = `<div class="empty"><div class="emoji">📋</div><p>No hay OPEs aquí todavía.</p><small>Pulsa "+ Nueva OPE" para empezar.</small></div>`;
+      return;
+    }
+
+    lista.innerHTML = filtered.map(ope => cardHTML(ope)).join('');
+  }
+
+  function cardHTML(ope) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const fin = ope.finInstancia ? new Date(ope.finInstancia) : null;
+    const dias = fin ? Math.ceil((fin - today) / 86400000) : null;
+    const urgente = dias !== null && dias >= 0 && dias <= 5;
+
+    const color = ESTADO_COLORS[ope.estadoGeneral] || '#e0e0e0';
+
+    let fechasHTML = '';
+    if (ope.finInstancia) {
+      const label = dias !== null && dias >= 0
+        ? `<span style="color:${dias<=5?'#c0392b':'#7c5cbf'};margin-left:4px">(${dias}d)</span>`
+        : dias !== null && dias < 0 ? `<span style="color:#bbb;margin-left:4px">(cerrado)</span>` : '';
+      fechasHTML += `<span>📅 Fin plazo: <strong>${fmtFecha(ope.finInstancia)}</strong>${label}</span>`;
+    }
+    if (ope.fechaExamen) {
+      fechasHTML += `<span>📝 Examen: <strong>${fmtFecha(ope.fechaExamen)}</strong>${ope.horaExamen ? ' ' + ope.horaExamen + 'h' : ''}</span>`;
+    }
+    if (ope.urlConvocatoria) {
+      fechasHTML += `<a href="${ope.urlConvocatoria}" target="_blank">🔗 Ver convocatoria</a>`;
+    }
+
+    const cumpleH = ope.requisitos.length > 0
+      ? ope.requisitos.filter(r => ope.haizea.requisitos[r.id]).length : null;
+    const cumpleK = ope.kerman.sePresenta && ope.requisitos.length > 0
+      ? ope.requisitos.filter(r => ope.kerman.requisitos[r.id]).length : null;
+
+    const perfilH = `
+      <div class="perfil-haizea">
+        <div class="perfil-nombre-h">🌸 Haizea</div>
+        <div class="perfil-info">${ope.haizea.inscrita ? '✅ Inscrita' : '⬜ Sin inscribir'} · ${ope.haizea.tasaPagada ? '✅ Tasa' : '⬜ Tasa'}</div>
+        ${cumpleH !== null ? `<div class="perfil-reqs">Requisitos: ${cumpleH}/${ope.requisitos.length}</div>` : ''}
+        ${ope.haizea.resultado ? `<div class="perfil-resultado">Resultado: ${ope.haizea.resultado}</div>` : ''}
+      </div>`;
+
+    const perfilK = ope.kerman.sePresenta ? `
+      <div class="perfil-kerman">
+        <div class="perfil-nombre-k">💙 Kerman</div>
+        <div class="perfil-info">${ope.kerman.inscrito ? '✅ Inscrito' : '⬜ Sin inscribir'} · ${ope.kerman.tasaPagada ? '✅ Tasa' : '⬜ Tasa'}</div>
+        ${cumpleK !== null ? `<div class="perfil-reqs-k">Requisitos: ${cumpleK}/${ope.requisitos.length}</div>` : ''}
+        ${ope.kerman.resultado ? `<div class="perfil-resultado">Resultado: ${ope.kerman.resultado}</div>` : ''}
+      </div>` : '';
+
+    return `
+      <div class="card ${urgente ? 'urgente' : ''}" style="border-left-color:${color}">
+        ${urgente ? `<div class="card-urgente-badge">⏰ ${dias}d</div>` : ''}
+        <div class="card-puesto">${esc(ope.puesto || 'Sin nombre')}</div>
+        <div class="card-sub">${esc(ope.organismo)}${ope.grupo ? ' · Grupo ' + ope.grupo : ''}${ope.plazas ? ' · ' + ope.plazas + ' plaza' + (ope.plazas > 1 ? 's' : '') : ''}</div>
+        <span class="badge" style="background:${color}">${ope.estadoGeneral}</span>
+        <div class="card-fechas">${fechasHTML}</div>
+        <div class="card-perfiles">${perfilH}${perfilK}</div>
+        <div class="card-actions">
+          <button class="btn-edit" onclick="abrirEditar(${ope.id})">✏️ Editar</button>
+          <button class="btn-del" onclick="eliminar(${ope.id})">🗑️</button>
+        </div>
+      </div>`;
+  }
+
+  // ---- MODAL ----
+  function abrirNueva() {
+    editandoId = null;
+    requisitosTemp = [];
+    document.getElementById('modal-titulo').textContent = 'Nueva OPE';
+    limpiarForm();
+    cambiarTab('general', document.querySelector('.tab-btn'));
+    renderRequisitosModal();
+    renderReqChecks();
+    document.getElementById('overlay').classList.add('open');
+  }
+
+  function abrirEditar(id) {
+    const ope = opes.find(o => o.id === id);
+    if (!ope) return;
+    editandoId = id;
+    requisitosTemp = JSON.parse(JSON.stringify(ope.requisitos));
+    document.getElementById('modal-titulo').textContent = 'Editar OPE';
+    cargarForm(ope);
+    cambiarTab('general', document.querySelector('.tab-btn'));
+    renderRequisitosModal();
+    renderReqChecks();
+    document.getElementById('overlay').classList.add('open');
+  }
+
+  function cerrarModal() {
+    document.getElementById('overlay').classList.remove('open');
+  }
+
+  function cambiarTab(tab, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    if (btn) btn.classList.add('active');
+  }
+
+  function toggleKerman() {
+    const val = document.getElementById('k-sePresenta').checked;
+    document.getElementById('kerman-fields').style.display = val ? 'block' : 'none';
+  }
+
+  function limpiarForm() {
+    ['f-organismo','f-puesto','f-url','f-tasa-importe','f-puntuacion-min','f-penalizacion',
+     'f-lista-prov','f-lista-def','f-aprobados','f-reflexion',
+     'f-fin-instancia','f-plazo-desde','f-plazo-hasta','f-fecha-examen','f-hora-examen',
+     'h-registro','h-resultado','k-registro','k-resultado','f-resolucion'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    ['f-bolsa','h-inscrita','h-tasa','k-sePresenta','k-inscrito','k-tasa'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.checked = false;
+    });
+    document.getElementById('f-sistema').value = '';
+    document.getElementById('f-grupo').value = '';
+    document.getElementById('f-estado').value = 'Pendiente solicitar';
+    document.getElementById('kerman-fields').style.display = 'none';
+  }
+
+  function cargarForm(ope) {
+    document.getElementById('f-organismo').value = ope.organismo || '';
+    document.getElementById('f-puesto').value = ope.puesto || '';
+    document.getElementById('f-sistema').value = ope.sistema || '';
+    document.getElementById('f-grupo').value = ope.grupo || '';
+    document.getElementById('f-plazas').value = ope.plazas || '';
+    document.getElementById('f-estado').value = ope.estadoGeneral || 'Pendiente solicitar';
+    document.getElementById('f-url').value = ope.urlConvocatoria || '';
+    document.getElementById('f-tasa-importe').value = ope.tasaImporte || '';
+    document.getElementById('f-bolsa').checked = !!ope.generaBolsa;
+    document.getElementById('f-puntuacion-min').value = ope.puntuacionMinima || '';
+    document.getElementById('f-penalizacion').value = ope.penalizacion || '';
+    document.getElementById('f-lista-prov').value = ope.listaProvisional || '';
+    document.getElementById('f-lista-def').value = ope.listaDefinitiva || '';
+    document.getElementById('f-aprobados').value = ope.aprobados || '';
+    document.getElementById('f-resolucion').value = ope.fechaResolucion || '';
+    document.getElementById('f-reflexion').value = ope.reflexion || '';
+    document.getElementById('f-fin-instancia').value = ope.finInstancia || '';
+    document.getElementById('f-plazo-desde').value = ope.plazoDesde || '';
+    document.getElementById('f-plazo-hasta').value = ope.plazoHasta || '';
+    document.getElementById('f-fecha-examen').value = ope.fechaExamen || '';
+    document.getElementById('f-hora-examen').value = ope.horaExamen || '';
+    document.getElementById('h-inscrita').checked = !!ope.haizea.inscrita;
+    document.getElementById('h-tasa').checked = !!ope.haizea.tasaPagada;
+    document.getElementById('h-registro').value = ope.haizea.nRegistro || '';
+    document.getElementById('h-resultado').value = ope.haizea.resultado || '';
+    document.getElementById('k-sePresenta').checked = !!ope.kerman.sePresenta;
+    document.getElementById('k-inscrito').checked = !!ope.kerman.inscrito;
+    document.getElementById('k-tasa').checked = !!ope.kerman.tasaPagada;
+    document.getElementById('k-registro').value = ope.kerman.nRegistro || '';
+    document.getElementById('k-resultado').value = ope.kerman.resultado || '';
+    document.getElementById('kerman-fields').style.display = ope.kerman.sePresenta ? 'block' : 'none';
+  }
+
+  // ---- REQUISITOS EN MODAL ----
+  function renderRequisitosModal() {
+    const div = document.getElementById('lista-requisitos');
+    if (requisitosTemp.length === 0) {
+      div.innerHTML = '<p class="no-reqs">Sin requisitos añadidos aún.</p>';
+      return;
+    }
+    div.innerHTML = requisitosTemp.map(r => `
+      <div class="req-item">
+        <span>${esc(r.texto)}</span>
+        <button class="btn-req-del" onclick="removeRequisito('${r.id}')">✕</button>
+      </div>`).join('');
+  }
+
+  function renderReqChecks() {
+    const hDiv = document.getElementById('h-req-checks');
+    const kDiv = document.getElementById('k-req-checks');
+    if (requisitosTemp.length === 0) {
+      hDiv.innerHTML = '';
+      kDiv.innerHTML = '';
+      return;
+    }
+
+    // Para haizea
+    const hReqs = editandoId ? (opes.find(o => o.id === editandoId)?.haizea?.requisitos || {}) : {};
+    hDiv.innerHTML = '<span class="field-label" style="margin-top:10px;display:block">Requisitos cumplidos</span>' +
+      requisitosTemp.map(r => `
+        <label class="req-check-item">
+          <input type="checkbox" id="hreq-${r.id}" ${hReqs[r.id] ? 'checked' : ''} />
+          ${esc(r.texto)}
+        </label>`).join('');
+
+    const kReqs = editandoId ? (opes.find(o => o.id === editandoId)?.kerman?.requisitos || {}) : {};
+    kDiv.innerHTML = '<span class="field-label" style="margin-top:10px;display:block">Requisitos cumplidos</span>' +
+      requisitosTemp.map(r => `
+        <label class="req-check-item">
+          <input type="checkbox" id="kreq-${r.id}" ${kReqs[r.id] ? 'checked' : ''} />
+          ${esc(r.texto)}
+        </label>`).join('');
+  }
+
+  function addRequisito() {
+    const input = document.getElementById('nuevo-req');
+    const texto = input.value.trim();
+    if (!texto) return;
+    requisitosTemp.push({ id: Date.now().toString(), texto });
+    input.value = '';
+    renderRequisitosModal();
+    renderReqChecks();
+  }
+
+  function removeRequisito(id) {
+    requisitosTemp = requisitosTemp.filter(r => r.id !== id);
+    renderRequisitosModal();
+    renderReqChecks();
+  }
+
+  // ---- GUARDAR ----
+  function guardarOpe() {
+    const hReqs = {};
+    const kReqs = {};
+    requisitosTemp.forEach(r => {
+      const hEl = document.getElementById('hreq-' + r.id);
+      const kEl = document.getElementById('kreq-' + r.id);
+      hReqs[r.id] = hEl ? hEl.checked : false;
+      kReqs[r.id] = kEl ? kEl.checked : false;
+    });
+
+    const ope = {
+      id: editandoId || Date.now(),
+      organismo: document.getElementById('f-organismo').value.trim(),
+      puesto: document.getElementById('f-puesto').value.trim(),
+      sistema: document.getElementById('f-sistema').value,
+      grupo: document.getElementById('f-grupo').value,
+      plazas: document.getElementById('f-plazas').value,
+      estadoGeneral: document.getElementById('f-estado').value,
+      urlConvocatoria: document.getElementById('f-url').value.trim(),
+      tasaImporte: document.getElementById('f-tasa-importe').value.trim(),
+      generaBolsa: document.getElementById('f-bolsa').checked,
+      puntuacionMinima: document.getElementById('f-puntuacion-min').value.trim(),
+      penalizacion: document.getElementById('f-penalizacion').value.trim(),
+      listaProvisional: document.getElementById('f-lista-prov').value.trim(),
+      listaDefinitiva: document.getElementById('f-lista-def').value.trim(),
+      aprobados: document.getElementById('f-aprobados').value.trim(),
+      fechaResolucion: document.getElementById('f-resolucion').value,
+      reflexion: document.getElementById('f-reflexion').value.trim(),
+      finInstancia: document.getElementById('f-fin-instancia').value,
+      plazoDesde: document.getElementById('f-plazo-desde').value,
+      plazoHasta: document.getElementById('f-plazo-hasta').value,
+      fechaExamen: document.getElementById('f-fecha-examen').value,
+      horaExamen: document.getElementById('f-hora-examen').value,
+      requisitos: requisitosTemp,
+      haizea: {
+        inscrita: document.getElementById('h-inscrita').checked,
+        tasaPagada: document.getElementById('h-tasa').checked,
+        nRegistro: document.getElementById('h-registro').value.trim(),
+        resultado: document.getElementById('h-resultado').value.trim(),
+        requisitos: hReqs,
+      },
+      kerman: {
+        sePresenta: document.getElementById('k-sePresenta').checked,
+        inscrito: document.getElementById('k-inscrito').checked,
+        tasaPagada: document.getElementById('k-tasa').checked,
+        nRegistro: document.getElementById('k-registro').value.trim(),
+        resultado: document.getElementById('k-resultado').value.trim(),
+        requisitos: kReqs,
+      }
+    };
+
+    if (editandoId) {
+      opes = opes.map(o => o.id === editandoId ? ope : o);
+    } else {
+      opes.push(ope);
+    }
+
+    localStorage.setItem('opes-tracker', JSON.stringify(opes));
+    cerrarModal();
+    render();
+  }
+
+  function eliminar(id) {
+    if (!confirm('¿Segura que quieres eliminar esta OPE?')) return;
+    opes = opes.filter(o => o.id !== id);
+    localStorage.setItem('opes-tracker', JSON.stringify(opes));
+    render();
+  }
+
+  // ---- UTILS ----
+  function fmtFecha(str) {
+    if (!str) return '';
+    const [y, m, d] = str.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // INIT
+  render();
+</script>
+</body>
+</html>
